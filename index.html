@@ -114,7 +114,7 @@ function subscribeGuild(){
   unsubscribe=firebase.onSnapshot(firebase.collection(db,'torres'),snap=>{records=snap.docs.map(d=>d.data());render();cleanupExpiredRecords()},err=>{notify('Erro na sincronização: '+err.message,true);$('syncStatus').textContent='Falha de acesso ao banco'});
 }
 async function startFirebase(){
-  if(!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebaseConfig.appId||guildLoginEmail==='COLOQUE_EMAIL_DA_CONTA_AQUI'){showLogin('O administrador precisa configurar o Firebase e a conta da guild no index.html.');$('loginButton').disabled=true;return;}
+  if(!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebaseConfig.appId||guildLoginEmail==='megamuacc@yahoo.com'){showLogin('O administrador precisa configurar o Firebase e a conta da guild no index.html.');$('loginButton').disabled=true;return;}
   try{
     const [app,store,authentication]=await Promise.all([
       import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
