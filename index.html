@@ -38,7 +38,7 @@
 // PARA ATIVAR SINCRONIZAÇÃO: cole a configuração do app web do Firebase aqui.
 // Sem configuração, o site funciona em modo local apenas neste navegador.
 // Email da ÚNICA conta criada em Authentication → Users. Visível no código público, não é uma senha.
-const guildLoginEmail = 'COLOQUE_EMAIL_DA_CONTA_AQUI';
+const guildLoginEmail = 'megamuacc@yahoo.com';
 const guildUid = 'FT1jZTxqXrZgjq5zrfnSXUner682';
 const firebaseConfig = {
   apiKey: "AIzaSyCeXTRsWbpgE3EiMTbK-onrwFNFpem02mo",
@@ -114,7 +114,7 @@ function subscribeGuild(){
   unsubscribe=firebase.onSnapshot(firebase.collection(db,'torres'),snap=>{records=snap.docs.map(d=>d.data());render();cleanupExpiredRecords()},err=>{notify('Erro na sincronização: '+err.message,true);$('syncStatus').textContent='Falha de acesso ao banco'});
 }
 async function startFirebase(){
-  if(!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebaseConfig.appId||guildLoginEmail==='megamuacc@yahoo.com'){showLogin('O administrador precisa configurar o Firebase e a conta da guild no index.html.');$('loginButton').disabled=true;return;}
+  if(!firebaseConfig.apiKey||!firebaseConfig.projectId||!firebaseConfig.appId||guildLoginEmail==='COLOQUE_EMAIL_DA_CONTA_AQUI'){showLogin('O administrador precisa configurar o Firebase e a conta da guild no index.html.');$('loginButton').disabled=true;return;}
   try{
     const [app,store,authentication]=await Promise.all([
       import('https://www.gstatic.com/firebasejs/11.10.0/firebase-app.js'),
@@ -133,7 +133,20 @@ $('loginForm').addEventListener('submit',async e=>{
   const email=guildLoginEmail,password=$('guildPassword').value;
   $('loginButton').disabled=true;$('loginMessage').textContent='Verificando acesso...';
   try{await authApi.signInWithEmailAndPassword(auth,email,password);$('guildPassword').value='';$('loginMessage').textContent=''}
-  catch(err){$('loginMessage').textContent='Senha incorreta ou conta não autorizada. Fale com o responsável pela guild.'}
+  catch(err){
+    console.warn('Falha de autenticação Farm Tower:',err.code || 'erro-desconhecido');
+    const problems={
+      'auth/invalid-credential':'Senha ou conta configurada não confere. Verifique o email cadastrado no Firebase e a senha.',
+      'auth/wrong-password':'Senha incorreta para a conta cadastrada no Firebase.',
+      'auth/user-not-found':'A conta configurada não existe no Firebase Authentication.',
+      'auth/invalid-email':'O email interno configurado no site é inválido.',
+      'auth/user-disabled':'A conta da guild está desativada no Firebase.',
+      'auth/too-many-requests':'Muitas tentativas de login. Aguarde antes de tentar novamente.',
+      'auth/network-request-failed':'Falha de conexão. Confira a internet e tente novamente.',
+      'auth/operation-not-allowed':'Ative Email/Senha no Firebase Authentication.'
+    };
+    $('loginMessage').textContent=problems[err.code] || `Não foi possível entrar (${err.code||'erro desconhecido'}).`;
+  }
   finally{$('loginButton').disabled=false}
 });
 $('logout').addEventListener('click',async()=>{try{await authApi.signOut(auth)}catch(err){notify('Erro ao sair: '+err.message,true)}});
