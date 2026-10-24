@@ -1,48 +1,33 @@
-# MEGAHUNT — Controle de Torres
+# Farm Tower — Acesso somente por senha
 
-Site para registrar a captura de torres no MEGAMU por mapa, servidor, jogador e horário. Mostra os próximos horários, contadores regressivos e filtros. Layout responsivo, todo em português.
+## Como funciona
+A tela pública pede **apenas uma senha**. Por trás, o sistema utiliza o email fixo de uma única conta do Firebase Authentication e a senha digitada. O visitante **não precisa digitar nem conhecer o email**. O email configurado no HTML é público, mas **a senha nunca deve aparecer no código**.
 
-## 1. Publicar grátis no GitHub Pages
+## 1. Criar conta da guild
+Firebase Console → FarmTower → Authentication → Método de login → **Email/Senha** → Ativar e Salvar. Depois, em **Usuários**, crie **uma única conta** para a guild, com um email que você controle e senha forte. Copie o UID da conta. Não ative login anônimo nem criação pública de contas.
 
-1. Faça login no github.com e crie um repositório chamado `megahunt-torres` (público para GitHub Pages no plano grátis).
-2. Faça upload do arquivo `index.html` (na raiz do repositório). Pode também enviar este README.
-3. Em **Settings > Pages > Build and deployment**, escolha **Deploy from a branch**, branch **main**, pasta **/(root)** e salve.
-4. A URL terá o formato `https://SEU-USUARIO.github.io/megahunt-torres/`.
+## 2. Configurar o HTML
+Abra `index.html` no editor e localize:
 
-**Importante:** antes de configurar o Firebase, a página funciona **apenas em modo local**. Cada usuário verá registros próprios, que não são compartilhados com a guild.
+`const guildLoginEmail = 'COLOQUE_EMAIL_DA_CONTA_AQUI';`
 
-## 2. Sincronizar registros em tempo real — Firebase
+Substitua somente o texto entre aspas pelo email da conta criada no Firebase. Isso não faz o email aparecer na tela de login, apenas no código-fonte público.
 
-1. Acesse https://console.firebase.google.com/ e crie um projeto.
-2. Em **Build > Firestore Database**, crie o banco no modo produção (escolha uma região). Não deixe as regras padrão bloqueando o acesso; instale as regras do passo 5.
-3. Em **Build > Authentication > Sign-in method**, ative **Anonymous**. O usuário não precisará fazer login para registrar torres.
-4. No painel do projeto, clique em **Project settings > Your apps > Web (ícone </>)** e registre um app Web. Copie os dados de `firebaseConfig` para o objeto com o mesmo nome que fica perto do final do `index.html`. Os campos normalmente incluem `apiKey`, `authDomain`, `projectId`, `storageBucket`, `messagingSenderId` e `appId`. Você pode adicionar os campos extras ao objeto.
-5. Em **Firestore Database > Rules**, substitua as regras pelas instruções presentes no arquivo `firestore.rules` e clique em **Publish**.
-6. Envie o `index.html` editado para o seu repositório e abra o link do Pages. O cabeçalho deve mostrar `Online • sincronizado com a guild`.
-7. Envie o link a seus colegas. Todos verão as alterações em tempo real.
+A configuração `firebaseConfig` do projeto `farmtower-93c81` e o UID autorizado já foram preenchidos neste pacote. Não precisa ativar Firebase Hosting: o site já usa GitHub Pages. Os valores de `firebaseConfig` não são segredos. **Nunca escreva a senha no HTML**.
 
-**Segurança:** esta versão é indicada para uma guild confiável. Qualquer visitante do site pode entrar anonimamente e modificar/excluir registros e configurações. O link não é senha. Para controle estrito por membro, é necessário criar login e regras específicas (por exemplo, uma lista de UIDs autorizados). As regras oferecidas limitam as operações aos dois grupos de documentos usados no app, mas **não** diferenciam membros da guild de visitantes.
+Verifique em Authentication → Configurações → Domínios autorizados se `rkiffer.github.io` aparece; se necessário, adicione-o.
 
-**Custo:** GitHub Pages costuma atender esse site gratuitamente. Firebase possui uma camada gratuita com limites de leitura, gravação e armazenamento; monitore o painel de consumo se houver muitos usuários.
+## 3. Proteger o Firestore
+O arquivo `firestore.rules` já está preenchido com o UID autorizado `FT1jZTxqXrZgjq5zrfnSXUner682`. Firebase Console → Firestore Database → Regras → copie o conteúdo corrigido e clique **Publicar**. Enviar apenas `firestore.rules` ao GitHub não publica as regras. Mantenha regras restritivas até finalizar.
 
-## 3. Ajustar mapas e tempo de espera
+## 4. Publicar
+Substitua somente o `index.html` no repositório público `rkiffer/FarmTower` e confirme **Commit changes**. Abra https://rkiffer.github.io/FarmTower/ e teste com a senha criada. O login permanece ativo até clicar em **Sair**.
 
-Abra **Parâmetros do evento** dentro do site:
+## Segurança
+- GitHub Pages é público; a proteção **real** dos registros é Firebase Authentication + Firestore Rules.
+- Todos que souberem a senha entram com a mesma identidade e podem modificar/excluir registros. Se alguém deixar a guild, altere a senha no Firebase Authentication.
+- O Firestore inicia protegido; nunca publique regras `allow read, write: if true`.
+- O horário da torre é capturado no instante de clicar em Registrar torre, conforme relógio do dispositivo.
 
-- Um mapa por linha: `Nome|minutos`, como `Nix|90`.
-- Informe servidores separados por vírgula: `1,2,3,4,5`.
-- Clique em **Salvar parâmetros**. Com o Firebase ativo, os parâmetros serão compartilhados.
-
-**ATENÇÃO:** os mapas iniciais e o prazo de **60 minutos são valores de demonstração**, NÃO são valores confirmados do evento MEGAMU. Insira os tempos oficiais do evento antes do uso real.
-
-### Como funciona o cálculo
-
-Horário da próxima liberação = horário registrado + tempo de espera configurado para o mapa. A lista ordena os registros pelo horário previsto. Após passar do horário, o item vira `Liberada`; o registro não desaparece automaticamente. Você pode excluir o registro anterior depois de tomar a próxima torre.
-
-Os registros usam timestamp em UTC por baixo e mostram horário no fuso local de cada visitante. A pessoa que registra deve usar o horário do próprio dispositivo.
-
-## Arquivos
-
-- `index.html`: página completa (HTML, CSS e JavaScript)
-- `firestore.rules`: regras de acesso do banco para o modo aberto
-- `README.md`: este guia
+## Estado deste pacote
+Apenas o email da conta compartilhada ainda precisa ser preenchido no `index.html`; não coloque a senha no arquivo. As regras precisam ser publicadas manualmente no console do Firebase e o HTML enviado ao GitHub.
